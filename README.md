@@ -1,6 +1,6 @@
 ###Builder/Optimizer for AMD Loader
 
-极速的AMD/CMD优化构建工具，支持requirejs/seajs/[https://github.com/yessky/loader]k.js等AMD/CMD模块系统.
+极速的AMD/CMD优化构建工具，支持requirejs/seajs/<a href="https://github.com/yessky/loader">k.js</a>等AMD/CMD模块系统.
 
 ####特点
 
@@ -22,4 +22,4 @@
 
 ####demo
 
-[https://github.com/yessky/builder-demo-for-loader]详情在这里
+<a href="https://github.com/yessky/builder-demo-for-loader">详情在这里</a>
