@@ -1,18 +1,18 @@
 ###Builder/Optimizer for AMD Loader
 
-为AMD量身打造的优化构建工具，支持标准AMD(requirejs)以及CMD(seajs)
+极速的AMD/CMD优化构建工具，支持requirejs/seajs/<a href="https://github.com/yessky/loader">k.js</a>等AMD/CMD模块系统.
 
 ####特点
 
-1. 标准模块依赖扫描
+1. 集成了html/js/css文件的合并压缩等模块，无需npm安装各种依赖，极速进行构建部署
 
 2. 插件资源依赖分析、资源路径推导、资源转换(如将文本格式资源转换为AMD模块)
 
 3. 支持模块自动打包为单一文件中，或者自定义规则配置拆分打包到多个文件中
 
-4. 自动生成模块相关配置信息，保证线上线下工作一致
+4. 自动生成模块相关配置信息
 
-5. 可正确转换UMD模块，如果资源未包含AMD/CMD/UMD申明, 目前暂时需要手动转换
+5. 支持UMD模块转换，暂时需要手动转换一般脚本文件
 
 ####用法
 
@@ -20,6 +20,6 @@
 
 2. 执行path/to/kbuilder profile=path/to/profile
 
-####Profile配置
+####demo
 
-TODO
+<a href="https://github.com/yessky/builder-demo-for-loader">详情在这里</a>
