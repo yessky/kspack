@@ -39,6 +39,13 @@
 		var tree = profile.$tree;
 		var ctree = tree[src] || (tree[src] = {});
 		var dyns = profile.$dyns;
+		var fixup = function(url, addSuffix) {
+			var ret = path.resolve( url.charAt(0) === '.' ? dir : base, url );
+			if (addSuffix) {
+				ret = util.extjs( ret );
+			}
+			return util.bslash( ret );
+		};
 		// cache mid
 		cache_mid(profile, src, base);
 		// loop deps
@@ -47,34 +54,45 @@
 				var da = dep.split('!');
 				var dn = da[1] ? da[1] : da[0];
 				var pn = da[1] ? da[0] : 0;
-				var tid;
-				var fixup = function(url, addSuffix) {
-					var ret = path.resolve( url.charAt(0) === '.' ? dir : base, url );
-					if (addSuffix) {
-						ret = util.extjs( ret );
-					}
-					return util.bslash( ret );
-				};
+				var tid, subn, rn;
+
 				// resove resource
 				if (pn) {
 					pn = fixup(pn, true);
 					var pid = cache_mid(profile, pn, base);
+					var res = rn = fixup(dn);
+
+					// 解决资源路径
 					var plugfix = profile.plugins && profile.plugins[pid];
-					tid = pn + "!" + fixup(dn);
-					// 插件解决资源路径
+
 					if (plugfix && plugfix.resolve) {
-						var ret = plugfix.resolve(dn, fixup);
-						if (plugfix.inline && !(/\?[^?]*$/.test(ret))) {
+						var ret = plugfix.resolve(dn, fixup, kjs, profile);
+						if (!ret) {
+							tid = pn;
+							rn = "";
+						} else if (plugfix.pack) {
 							tid = pn + "!" + ret;
+							rn = ret;
 						} else {
-							dyns[tid] = ret.replace(/\?[^?]*$/, "");
+							tid = pn + "!" + rn;
 						}
-					} else if (plugfix && !plugfix.inline) {
-						dyns[tid] = fixup(dn).replace(/\?[^?]*$/, "");
+					} else {
+						tid = pn + "!" + rn;
 					}
+
+					// 打包插件资源
+					if (plugfix && plugfix.pack && rn && !plugfix.inline) {
+						subn = rn;
+					} else if ((!plugfix || !plugfix.pack) && rn) {
+						dyns[tid] = res;
+					}
+
 					deps[i] = tid;
-					var prid = util.bslash( path.relative(base, tid.split("!")[1]) );
-					cache_prid(profile, tid, base, pid, dyns[tid] ? dn : prid);
+
+					if (rn) {
+						var prid = dyns[tid] ? dn : util.bslash( path.relative(base, rn) );
+						cache_prid(profile, tid, base, pid, prid);
+					}
 				} else {
 					deps[i] = tid = fixup(dn, true);
 				}
@@ -93,6 +111,9 @@
 							tree[pn] = {};
 							ctree[tid][pn] = tree[pn];
 							walker( pn, profile );
+						}
+						if (subn) {
+							walker( subn, profile );
 						}
 					} else {
 						walker( tid, profile );
@@ -116,6 +137,8 @@
 		var priors = {};
 		var mids = profile.$mids;
 
+		var pends = {};
+		var stack = [];
 		// compute priorities
 		expand( main, deep );
 		profile.$mods = mods;
@@ -148,8 +171,15 @@
 
 		function expand( src, deep ) {
 			var dtree = tree[src];
+			if (!dtree) { return; }
 			deep += 1;
+			stack.push(src);
+			if (pends[src]) {
+				return util.writeSync("./xxx.js", stack.join("\n"));
+			}
+			pends[src] = 1;
 			for ( var p in dtree ) {
+				//console.log(p);
 				if ( !(p in mods) || mods[p] < deep ) {
 					mods[p] = deep;
 					expand( p, deep );
