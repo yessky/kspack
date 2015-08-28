@@ -137,8 +137,6 @@
 		var priors = {};
 		var mids = profile.$mids;
 
-		var pends = {};
-		var stack = [];
 		// compute priorities
 		expand( main, deep );
 		profile.$mods = mods;
@@ -173,13 +171,7 @@
 			var dtree = tree[src];
 			if (!dtree) { return; }
 			deep += 1;
-			stack.push(src);
-			if (pends[src]) {
-				return util.writeSync("./xxx.js", stack.join("\n"));
-			}
-			pends[src] = 1;
 			for ( var p in dtree ) {
-				//console.log(p);
 				if ( !(p in mods) || mods[p] < deep ) {
 					mods[p] = deep;
 					expand( p, deep );
