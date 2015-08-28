@@ -90,7 +90,7 @@
 		return ret;
 	};
 
-	util.parseDefine = function( code, filename ) {
+	util.parseDefine = function( code ) {
 		var ret = ['', '', ''];
 		var ast = UglifyJS.parse(code);
 		var done = 0;

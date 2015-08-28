@@ -37,7 +37,6 @@ grunt.initConfig({
 	},
 
 	uglify: {
-		//options: grunt.file.readJSON('.uglifyrc'),
 		builder: {
 			options: {
 				sourceMap: false
