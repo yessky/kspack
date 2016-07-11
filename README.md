@@ -1,25 +1,49 @@
-###Builder/Optimizer for AMD Loader
+###Builder/Optimizer for AMD/CMD Loader
 
-极速的AMD/CMD优化构建工具，支持requirejs/seajs/<a href="https://github.com/yessky/loader">k.js</a>等AMD/CMD模块系统.
+极速的AMD/CMD优化构建工具，支持requirejs/seajs/<a href="https://github.com/yessky/loader">k.js</a>等loader定义的AMD/CMD风格的模块.
 
 ####特点
 
-1. 集成了html/js/css文件的合并压缩等模块，无需npm安装各种依赖，极速进行构建部署
+1. 资源依赖分析
 
-2. 插件资源依赖分析、资源路径推导、资源转换(如将文本格式资源转换为AMD模块)
+2. 资源transform
 
-3. 支持模块自动打包为单一文件中，或者自定义规则配置拆分打包到多个文件中
+3. 多入口资源打包
 
-4. 自动生成模块相关配置信息
+4. 按需资源打包
 
-5. 支持UMD模块转换，暂时需要手动转换一般脚本文件
+5. 公用资源提取服务
+
+6. 文件添加md5指纹
+
+7. 使用简单的js配置文件进行打包配置
+
+8. 打包后自动生成模块资源map配置信息，可配合传统php、jsp及spa项目
+
+9. 使用node执行打包，速度超快
 
 ####用法
 
-1. 创建一个构建的profile文件(返回一个包含配置信息接口的node模块)
+1. 复制kspack.js到你的项目中
 
-2. 执行path/to/kbuilder profile=path/to/profile
+2. 复制 `kspack.profile.js` 并按照你的项目修改，生成kspack打包所需的配置文件profile
+
+3. 定义gulp任务
+
+	```
+		var KSPACK = require("./kspack");
+		var ksprofile = require("./kspack.profile");
+
+		gulp.task("kspack", function(cb) {
+			var packer = new KSPACK(ksprofile);
+			packer.on("complete", function(buildInfo) {
+				// 这里根据自己的使用场景，自行添加后续处理逻辑，比如写入配置文件到html文件中
+				cb();
+			});
+			packer.build();
+		});
+	```
 
 ####demo
 
-<a href="https://github.com/yessky/builder-demo-for-loader">详情在这里</a>
+<a href="https://github.com/yessky/spa-sample-project">详情在这里</a>
