@@ -47,3 +47,10 @@
 ####demo
 
 <a href="https://github.com/yessky/spa-sample-project">详情在这里</a>
+
+
+####License
+
+NOTE: 使用请保留版权信息
+
+`kspack` is available under the terms of the <a href="https://github.com/yessky/kspack/blob/master/LICENSE.md">MIT License.</a>
