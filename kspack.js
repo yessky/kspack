@@ -1,6 +1,6 @@
 /*
  * builder for Moduler System
- * Copyright (C) 2015 - 2016 aaron.xiao<admin@veryos.com>
+ * Copyright (C) 2015 aaron.xiao
  */
 
 var fs = require("fs");
@@ -193,9 +193,17 @@ function getObject(expr) {
 	return g;
 }
 
-function scanSource(source) {
+function scanSource(source, mid) {
 	var ret = [];
-	var ast = U.parse(source);
+	var ast = null;
+	try {
+		ast = U.parse(source);
+	} catch (e) {
+		console.error("  > Synax error found at " + mid + ", details: ");
+		console.error("  > reason: " + e.message);
+		console.error("  > line: " + e.line + ", col: " + e.col + ", " + e.pos);
+		process.exit();
+	}
 	var def = false;
 	var async = false;
 	var tw = new U.TreeWalker(function(node, decend) {
@@ -504,7 +512,7 @@ function defineModule(module, source) {
 
 	if (module.injected === LOADED) { return }
 
-	var ret = module.plugin ? {deps: []} : scanSource(source);
+	var ret = module.plugin ? {deps: []} : scanSource(source, mid);
 	var shim = shims[mid];
 	var deps = shim ? (shim.deps || []) : ret.deps;
 	mix(module, {
@@ -1003,6 +1011,9 @@ mix(Builder.prototype, {
 					});
 					chunk.assets = result
 				}
+				if (it.uglified) {
+					chunk.uglified = it.uglified.slice(0)
+				}
 				chunks.push(chunk)
 			} else if (it.type == "common") {
 				chunk.assets = commonlize(it.asset || this.entry);
@@ -1039,7 +1050,10 @@ mix(Builder.prototype, {
 						return true
 					}
 				}
-			})
+			});
+			if (it.uglified) {
+				packages[name].uglified = it.uglified
+			}
 		}, this);
 
 		// filter on-demand chunk's assets
@@ -1117,7 +1131,7 @@ mix(Builder.prototype, {
 	},
 
 	// transform cjs to amd format, inline templates, etc.
-	compile: function(module, skipCompile) {
+	compile: function(module, skipCompile, skipCompress) {
 		var profile = this.profile;
 		var modular = profile.modular;
 		var output = profile.output;
@@ -1145,7 +1159,7 @@ mix(Builder.prototype, {
 			url: url,
 			result: module.result,
 			shim: module.shim
-		}, skipCompile, output.compress, function(url) {
+		}, skipCompile, skipCompress ? false : output.compress, function(url) {
 			var parts = url.split(".");
 			var ext = parts.pop();
 			return url || parts.join(".") + ".resolved." + ext
@@ -1162,13 +1176,26 @@ mix(Builder.prototype, {
 		var source = "";
 		var identifier = 1;
 		var hash, filehash;
+		var isUglified = function(mid) {
+			var uglified = false;
+			if (isArray(assets.uglified)) {
+				for (var i = 0, l = assets.uglified.length; i < l; ++i) {
+					if (assets.uglified[i] === mid) {
+						uglified = true;
+						assets.uglified.splice(i, 1);
+						break;
+					}
+				}
+			}
+			return uglified;
+		};
 
 		assets.map(function(mid) {
 			return modules[mid]
 		}).sort(function(a, b) {
 			return b.identifier > a.identifier ? 1 : -1
 		}).forEach(function(module) {
-			source += (source ? "\n" : "") + this.compile(module);
+			source += (source ? "\n" : "") + this.compile(module, false, isUglified(module.mid));
 			identifier = Math.max(identifier, module.identifier)
 		}, this);
 
@@ -1291,7 +1318,7 @@ var compilers = [
 function compileAmd(module, noCompile, compress) {
 	var result;
 	var source = noCompile ? module.result : (module.shim || module.result);
-	var parsed = parseSource(source);
+	var parsed = parseSource(source, module.mid);
 
 	if (noCompile || (!parsed.isAmd && !module.shim)) {
 		result = module.result;
@@ -1316,9 +1343,17 @@ function compileAmd(module, noCompile, compress) {
 // ===========================================
 // builder's helpers
 // ===========================================
-function parseSource(code) {
+function parseSource(code, mid) {
 	var ret = ['', '', ''];
-	var ast = U.parse(code);
+	var ast = null;
+	try {
+		ast = U.parse(code);
+	} catch (e) {
+		console.error("  > Synax error found at " + mid + ", details: ");
+		console.error("  > reason: " + e.message);
+		console.error("  > line: " + e.line + ", col: " + e.col + ", " + e.pos);
+		process.exit();
+	}
 	var done = 0;
 	var sep = function(node) {
 		return code.substring(node.start.pos, node.end.endpos);
