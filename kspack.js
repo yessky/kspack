@@ -829,6 +829,13 @@ mix(Builder.prototype, {
 
 		// load modules
 		req(modular, mids, function() {
+			if (modular.paths) {
+				for (var i in modular.paths) {
+					if (!modules[modular.paths[i]]) {
+						modules[modular.paths[i]] = modules[i];
+					}
+				}
+			}
 			this.timing("assetsLoad");
 			this.async(function() {
 				setTimeout(function() {
@@ -1047,6 +1054,9 @@ mix(Builder.prototype, {
 					var module = modules[i];
 					if (!module.plugin || !module.plugin.copyonly) {
 						emited[i] = true;
+						if (i in profile.modular.paths) {
+							emited[profile.modular.paths[i]] = true;
+						}
 						return true
 					}
 				}
